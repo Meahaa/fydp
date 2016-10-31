@@ -26,14 +26,22 @@ with open('data.json') as datafile:
 
   print "humdity: ", h
 
-  humidity = round_up_to_five(h)
-  print "rounded humidity: ", humidity
+  #for testing
+  #humidity = round_up_to_five(h)
+  #print "rounded humidity: ", humidity
+
+  #for testing
+  humidity = 40
 
   air_temp = t['temp']
   print "air temperature: ", air_temp
 
-  air_temp = round_up_to_even(air_temp)
+  #remove for testing
+  #air_temp = round_up_to_even(air_temp)
   print "rounded aid temperature: ", air_temp
+
+  #for testing only
+  air_temp = 102
 
   body_temp = random.uniform(36.5, 41)
   print "body temperature: ", body_temp
@@ -47,8 +55,11 @@ with open('data.json') as datafile:
   d = {}
   # temp: {humidity: Heat index}
   d = {110 : {40:136}, 108 : { 40:130, 45:137 }, 106 : { 40:124, 45:130, 50:137}, 104 : { 40:119, 45:124, 50:131, 55:137}, 102 : { 40:114, 45:114, 50:124, 55:130, 60:137}, 100 : { 40:109, 45:114, 50:118, 55:124, 60:129, 65:136 }, 98 : { 40:105, 45:109, 50:113, 55:117, 60:123, 65:128, 70:134} }
-  
-  print d[110][40]
+
+  if air_temp in d:
+    print "value : ", d[air_temp][humidity]
+  else:
+    print 'no'
 
 
   if body_temp > 40.5:
