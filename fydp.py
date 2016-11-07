@@ -2,8 +2,14 @@ import json
 import random
 import pyowm
 import math
+import numppy
 from pprint import pprint
+#API Key fro Weather Data
 owm = pyowm.OWM('e6bfa133d68b3b9cf9547e4b7bf7f35d')
+heartrate = np.genfromtxt('./HR.csv', delimiter=',')
+i = 0
+delta_HR = []
+trend_HR = []
 
 #used to round the temperature so it can be found in table
 def round_up_to_even(f):
@@ -13,15 +19,16 @@ def round_up_to_even(f):
 def round_up_to_five(x):
     return int(math.ceil(x / 5.0)) * 5
 
+#reading in file for user supplied variables
 with open('data.json') as datafile:
   data = json.load(datafile)
   height = data["height"]
   weight = data["weight"]
   gender = data["gender"]
-  bmi = float(weight) / (float(height)*float(height))
+  bmi = (float(weight) / (float(height))*float(height))
 
   #flag to indicate yes or no heat exhaustion
-  flag = 0
+  flag = False
 
   #set location for weather data and request data
   observation = owm.weather_at_place('Waterloo,CA')
@@ -48,15 +55,11 @@ with open('data.json') as datafile:
   heart_rate = random.randint(80, 220)
   print "heart rate: ", heart_rate
 
-  dehyd = 0
-  dehyd_heart_rate = 0
-  dehyd_body_temp = 0
-
   d = {}
   # temp: {humidity: Heat index}
   d = {
         110 : {40:136}, 
-        108 : { 40:130, 45:137 }, 
+        108 : { 40:130, 45:137},
         106 : { 40:124, 45:130, 50:137}, 
         104 : { 40:119, 45:124, 50:131, 55:137}, 
         102 : { 40:114, 45:114, 50:124, 55:130, 60:137}, 
@@ -88,6 +91,60 @@ with open('data.json') as datafile:
   else:
     print 'Caution: No critical danger due to heat'
 
+  #process the heartrate
+  for heart in heartrate:
+      HR1 = heartrate[i]
+      HR2 = heartrate[i+1]
+
+      #compare the two heartrates against eachother
+      delta_HR = HR2-HR1
+
+      #append the difference to the end of an array
+      trend_HR.append(delta_HR)
+
+      #randomizing body temp for now as I want to see what works
+      body_temp = random.uniform(36.5, 41)
+      print ("body temperature: ", body_temp)
+      print ("i is:", i)
+      bmi = 24
+      if body_temp >= 40.5:
+          print("Warning: Heat stroke. Cease activity immediately.")
+          flag = True
+      if bmi < 25:
+          print("Normal BMI level")
+          if body_temp > 39 and body_temp < 40.5:
+              print("warning: Heat Exhaustion due to high body temperature")
+              flag = True
+          if heart > 200:
+              print("Warning: Heat Exhaustion due to high heart rate")
+              flag = True
+          if (i>=1):
+              if trend_HR[i]>trend_HR[i-1]:
+                  print ("Delta HR is:", delta_HR)
+                  print ("Warning: Heart Rate Increasing by", delta_HR)
+          if flag != True:
+              print("Player stable")
+      if bmi > 25 and bmi < 30:
+          print("Overweight BMI level")
+          if body_temp > 38.5 and body_temp < 40.5:
+              print("warning: Heat Exhaustion due to high body temperature")
+              flag = True
+          if heart > 190:
+              print("Warning: Heat Exhaustion due to high heart rate")
+              flag = True
+          if flag != True:
+              print("Player stable")
+      if bmi > 29.9:
+          print("Obese BMI level")
+          if body_temp > 37 and body_temp < 40.5:
+              print("warning: Heat Exhaustion due to high body temperature")
+              flag = True
+          if heart > 180:
+              print("Warning: Heat Exhaustion due to high heart rate")
+              flag = True
+          if flag != True:
+              print("Player stable")
+   i = i+1
 
   if body_temp >= 40.5:
     print "warning: Heat stroke. Cease activity immediately."
