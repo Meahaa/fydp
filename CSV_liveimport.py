@@ -7,11 +7,11 @@ delta_HR = []
 trend_HR = []
 flag = False
 
-heartrate = pd.read_csv('/Users/eadickison/Documents/Processing/HeatExaustionProcessing/test.csv')
-sensor_data = heartrate['sensor1']
-split_data = sensor_data.apply(lambda x: pd.Series(x.split(',')))
-HR_array = split_data[0].astype(int)
-temp_array = split_data[1].astype(float)
+heartrate = pd.read_csv('/Users/eadickison/Documents/Processing/HeatExaustionProcessing/test2.csv')
+#sensor_data = heartrate['sensor1']
+#split_data = sensor_data.apply(lambda x: pd.Series(x.split(',')))
+HR_array = heartrate['sensor1']
+temp_array = heartrate['sensor2']
 i = 0
 print(HR_array)
 for heart in HR_array:
@@ -33,7 +33,7 @@ for heart in HR_array:
             print("Warning: Heat Exhaustion due to high heart rate")
             flag = True
         if (i>=1):
-            if trend_HR[i]>trend_HR[i-1] & trend_HR[i]>0:
+            if trend_HR[i]>trend_HR[i-1] and trend_HR[i]>0:
                 print ("Delta HR is:", delta_HR)
                 print ("Warning: Heart Rate Increasing by", delta_HR)
         if flag != True:
