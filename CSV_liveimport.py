@@ -1,4 +1,5 @@
 import pandas as pd
+import time
 
 HR_array = []
 temp_array = []
@@ -7,18 +8,19 @@ delta_HR = []
 trend_HR = []
 flag = False
 
-heartrate = pd.read_csv('/Users/eadickison/Documents/Processing/HeatExaustionProcessing/test2.csv')
+data = pd.read_csv('/Users/eadickison/Documents/Processing/HeatExaustionProcessing/test24.csv')
 #sensor_data = heartrate['sensor1']
 #split_data = sensor_data.apply(lambda x: pd.Series(x.split(',')))
-HR_array = heartrate['sensor1']
-temp_array = heartrate['sensor2']
-i = 0
-print(HR_array)
+HR_array = data['sensor1']
+temp_array = data['sensor2']
+i = 1
+k=0
+j=0
 for heart in HR_array:
-    HR1 = HR_array[i]
-    HR2 = HR_array[i+1]
+    time.sleep(5)
+    HR1 = HR_array[i-1]
+    HR2 = HR_array[i]
     delta_HR = HR2-HR1
-    print (delta_HR)
     trend_HR.append(delta_HR)
     body_temp = temp_array[i]
     print ("body temperature: ", temp_array[i])
@@ -32,8 +34,8 @@ for heart in HR_array:
         if heart > 200:
             print("Warning: Heat Exhaustion due to high heart rate")
             flag = True
-        if (i>=1):
-            if trend_HR[i]>trend_HR[i-1] and trend_HR[i]>0:
+        if (k>=1):
+            if trend_HR[k]>trend_HR[k-1] and trend_HR[k]>0:
                 print ("Delta HR is:", delta_HR)
                 print ("Warning: Heart Rate Increasing by", delta_HR)
         if flag != True:
@@ -59,3 +61,9 @@ for heart in HR_array:
         if flag != True:
             print("Player stable")
     i = i+1
+    j = i+1
+    test = HR_array.size
+    print(test)
+    if j >= test:
+        print ("loading")
+        time.sleep(5)
