@@ -1,15 +1,31 @@
 import json
-import random
 import pyowm
 import math
-import numppy
-from pprint import pprint
+import serial
+import colorama as c
+from colorama import Fore, Back, Style
+
 #API Key fro Weather Data
+ser = serial.Serial('/dev/cu.usbmodem1411', 115200)
 owm = pyowm.OWM('e6bfa133d68b3b9cf9547e4b7bf7f35d')
-heartrate = np.genfromtxt('./HR.csv', delimiter=',')
-i = 0
+data = []
+data_split = []
+HR_array = []
+temp_array = []
+new_array = []
+delta_temp = []
 delta_HR = []
-trend_HR = []
+core_temp = []
+new_HR = []
+
+c.init()
+
+#flag to indicate yes or no heat exhaustion
+flag = False
+
+#counter to advance index of HR and temp arrays
+i=0
+k=0
 
 #used to round the temperature so it can be found in table
 def round_up_to_even(f):
@@ -25,10 +41,7 @@ with open('data.json') as datafile:
   height = data["height"]
   weight = data["weight"]
   gender = data["gender"]
-  bmi = (float(weight) / (float(height))*float(height))
-
-  #flag to indicate yes or no heat exhaustion
-  flag = False
+  bmi = (float(weight) / (float(height)*float(height)))
 
   #set location for weather data and request data
   observation = owm.weather_at_place('Waterloo,CA')
@@ -41,19 +54,11 @@ with open('data.json') as datafile:
 
   #found humidity so it can be found in the table
   humidity = round_up_to_five(h)
-  print "rounded humidity: ", humidity
+  print Style.BRIGHT + "rounded humidity: "+ Style.RESET_ALL + Fore.BLUE + str(humidity) + Style.RESET_ALL
 
   #round air temperature so it can be found in table
   air_temp = round_up_to_even(air_temp)
-  print "rounded air temperature: ", air_temp
-
-  #generate a random body temperature - static
-  body_temp = random.uniform(36.5, 41)
-  print "body temperature: ", body_temp
-
-  #generate a random heart rate - static
-  heart_rate = random.randint(80, 220)
-  print "heart rate: ", heart_rate
+  print Style.BRIGHT + "rounded air temperature: "+ Style.RESET_ALL + Fore.BLUE + str(air_temp)+ Style.RESET_ALL
 
   d = {}
   # temp: {humidity: Heat index}
@@ -80,7 +85,7 @@ with open('data.json') as datafile:
 
     #critical heat index
     if heat_index >= 130:
-      print "Extreme Danger: Heat Stroke and heat exhaustion very likely"
+      print Style.BRIGHT + Fore.RED + "Extreme Danger: Heat Stroke and heat exhaustion very likely" + Style.RESET_ALL
     elif heat_index < 130 and heat_index >= 104:
       print "Danger: Heat Exhaustion likely"
     elif heat_index < 104 and heat_index >= 93:
@@ -91,105 +96,72 @@ with open('data.json') as datafile:
   else:
     print 'Caution: No critical danger due to heat'
 
-  #process the heartrate
-  for heart in heartrate:
-      HR1 = heartrate[i]
-      HR2 = heartrate[i+1]
+  while True:
+    data = ser.readline()
+    data_split=data.rsplit(",")
+    HR_array.append(data_split[0])
+    temp_array.append(data_split[1])
+    temp_array = map(float, temp_array)
+    HR_array = map(float, HR_array)
+    heart = HR_array[i]
+    body_temp = temp_array[i]
+    core_temp.append(body_temp+2)
+    core = core_temp[i]
+    if (i>0):
+        j = i-1
+        temp_minus = core_temp[j]
+        delta_temp.append(core-temp_minus)
+        if (heart != 0):
+            new_HR.append(heart)
+            if(k>0):
+                HR_minus = new_HR[k-1]
+                delta_HR.append(new_HR[k]-HR_minus)
+                print(Style.BRIGHT + Fore.RED + "HR Delta:"+ str(new_HR[k])+ Style.RESET_ALL)
+            k = k+1
+        print "Temperature Delta:", delta_temp[j]
+    print "HR:", heart
+    print "Core Temperature:", core
+    if bmi <25:
+        print("Normal BMI level")
+        if (i >0):
+            if (heart != 0):
+                over_HR = new_HR[k-1]-new_HR[0]
+                over_temp = delta_temp[i-1]-delta_temp[0]
+                dehydration = ((1/3)*over_HR)+(5*over_temp)
+                print "Total HR Delta:", over_HR
+                print Style.BRIGHT + Fore.RED + "Dehydration:"+ str(round(dehydration,3))+ Style.RESET_ALL
+        if (i < 1):
+            dehydration=0
+        if body_temp > 39 and body_temp < 40.5:
+            print(Style.BRIGHT + Fore.YELLOW + "Warning: Heat Exhaustion due to high body temperature"+ Style.RESET_ALL)
+            flag = True
+        if heart > 200:
+            print(Style.BRIGHT + Fore.RED + "Warning: Heat Exhaustion due to high heart rate"+ Style.RESET_ALL)
+            flag = True
+        if dehydration >6:
+            print(Style.BRIGHT + Fore.RED + "Warning: Heat Exhaustion due to dehydration"+ Style.RESET_ALL)
+    if bmi > 25 and bmi < 30:
+            print("Overweight BMI level")
+            if body_temp > 38.5 and body_temp < 40.5:
+                print(Style.BRIGHT + Fore.YELLOW + "Warning: Heat Exhaustion due to high body temperature"+ Style.RESET_ALL)
+                flag = True
+            if heart > 190:
+                print(Style.BRIGHT + Fore.RED + "Warning: Heat Exhaustion due to high heart rate"+ Style.RESET_ALL)
+                flag = True
+    if bmi >= 30:
+            print("Obese BMI level")
+            if body_temp > 37 and body_temp < 40.5:
+                print(Style.BRIGHT + Fore.YELLOW + "Warning: Heat Exhaustion due to high body temperature"+ Style.RESET_ALL)
+                flag = True
+            if heart > 180:
+                print(Style.BRIGHT + Fore.RED + "Warning: Heat Exhaustion due to high heart rate"+ Style.RESET_ALL)
+                flag = True
+    if flag != True:
+               print(Style.BRIGHT + Fore.GREEN + "Player stable" + Style.RESET_ALL)
+    if body_temp >= 40.5:
+            print (Style.BRIGHT + Fore.RED +"Warning: Heat Stroke. Cease activity immediately."+ Style.RESET_ALL)
+    i = i+1
 
-      #compare the two heartrates against eachother
-      delta_HR = HR2-HR1
-
-      #append the difference to the end of an array
-      trend_HR.append(delta_HR)
-
-      #randomizing body temp for now as I want to see what works
-      body_temp = random.uniform(36.5, 41)
-      print ("body temperature: ", body_temp)
-      print ("i is:", i)
-      bmi = 24
-      if body_temp >= 40.5:
-          print("Warning: Heat stroke. Cease activity immediately.")
-          flag = True
-      if bmi < 25:
-          print("Normal BMI level")
-          if body_temp > 39 and body_temp < 40.5:
-              print("warning: Heat Exhaustion due to high body temperature")
-              flag = True
-          if heart > 200:
-              print("Warning: Heat Exhaustion due to high heart rate")
-              flag = True
-          if (i>=1):
-              if trend_HR[i]>trend_HR[i-1]:
-                  print ("Delta HR is:", delta_HR)
-                  print ("Warning: Heart Rate Increasing by", delta_HR)
-          if flag != True:
-              print("Player stable")
-      if bmi > 25 and bmi < 30:
-          print("Overweight BMI level")
-          if body_temp > 38.5 and body_temp < 40.5:
-              print("warning: Heat Exhaustion due to high body temperature")
-              flag = True
-          if heart > 190:
-              print("Warning: Heat Exhaustion due to high heart rate")
-              flag = True
-          if flag != True:
-              print("Player stable")
-      if bmi > 29.9:
-          print("Obese BMI level")
-          if body_temp > 37 and body_temp < 40.5:
-              print("warning: Heat Exhaustion due to high body temperature")
-              flag = True
-          if heart > 180:
-              print("Warning: Heat Exhaustion due to high heart rate")
-              flag = True
-          if flag != True:
-              print("Player stable")
-   i = i+1
-
-  if body_temp >= 40.5:
-    print "warning: Heat stroke. Cease activity immediately."
-    flag = 1
-
-  #low BMI
-  if bmi < 25: 
-    print "Normal BMI level"
-
-    if body_temp > 39 and body_temp < 40.5: 
-      print "warning: Heat Exhaustion due to high body temperature"
-      flag = 1 
-
-    if heart_rate > 200:
-      print "Warning: Heat Exhaustion due to high heart rate"
-      flag = 1
-
-
-  #Medium BMI
-  if bmi > 25 and bmi < 30:
-    print "Overweight BMI level"
-
-    if body_temp > 38.5 and body_temp < 40.5: 
-      print "warning: Heat Exhaustion due to high body temperature"
-      flag = 1
-
-    if heart_rate > 190:
-      print "Warning: Heat Exhaustion due to high heart rate"
-      flag = 1
-
-  #High BMI
-  if bmi > 29.9:
-    print "Obese BMI level"
-
-    if body_temp > 37 and body_temp < 40.5: 
-      print "warning: Heat Exhaustion due to high body temperature"
-      flag = 1
-
-    if heart_rate > 180:
-      print "Warning: Heat Exhaustion due to high heart rate"
-      flag = 1
-
-  #No dangers found the player is stable
-  if flag == 0:
-    print "Player stable"
 
 
 
