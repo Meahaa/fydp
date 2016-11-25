@@ -116,7 +116,9 @@ with open('data.json') as datafile:
             if(k>0):
                 HR_minus = new_HR[k-1]
                 delta_HR.append(new_HR[k]-HR_minus)
-                print(Style.BRIGHT + Fore.RED + "HR Delta:"+ str(new_HR[k])+ Style.RESET_ALL)
+                print("HR Delta:"+ str(delta_HR[k-1]))
+                if (delta_HR[k-1]>0):
+                    print(Style.BRIGHT + Fore.MAGENTA + "INCREASING" + Style.RESET_ALL)
             k = k+1
         print "Temperature Delta:", delta_temp[j]
     print "HR:", heart
@@ -128,25 +130,24 @@ with open('data.json') as datafile:
                 over_HR = new_HR[k-1]-new_HR[0]
                 over_temp = delta_temp[i-1]-delta_temp[0]
                 dehydration = ((1/3)*over_HR)+(5*over_temp)
-                print "Total HR Delta:", over_HR
-                print Style.BRIGHT + Fore.RED + "Dehydration:"+ str(round(dehydration,3))+ Style.RESET_ALL
+                print Style.BRIGHT + "Dehydration:"+ str(round(dehydration,3))+ Style.RESET_ALL
         if (i < 1):
             dehydration=0
         if body_temp > 39 and body_temp < 40.5:
             print(Style.BRIGHT + Fore.YELLOW + "Warning: Heat Exhaustion due to high body temperature"+ Style.RESET_ALL)
             flag = True
         if heart > 200:
-            print(Style.BRIGHT + Fore.RED + "Warning: Heat Exhaustion due to high heart rate"+ Style.RESET_ALL)
+            print(Style.BRIGHT + Fore.YELLOW + "Warning: Heat Exhaustion due to high heart rate"+ Style.RESET_ALL)
             flag = True
         if dehydration >6:
-            print(Style.BRIGHT + Fore.RED + "Warning: Heat Exhaustion due to dehydration"+ Style.RESET_ALL)
+            print(Style.BRIGHT + Fore.YELLOW + "Warning: Heat Exhaustion due to dehydration"+ Style.RESET_ALL)
     if bmi > 25 and bmi < 30:
             print("Overweight BMI level")
             if body_temp > 38.5 and body_temp < 40.5:
                 print(Style.BRIGHT + Fore.YELLOW + "Warning: Heat Exhaustion due to high body temperature"+ Style.RESET_ALL)
                 flag = True
             if heart > 190:
-                print(Style.BRIGHT + Fore.RED + "Warning: Heat Exhaustion due to high heart rate"+ Style.RESET_ALL)
+                print(Style.BRIGHT + Fore.YELLOW + "Warning: Heat Exhaustion due to high heart rate"+ Style.RESET_ALL)
                 flag = True
     if bmi >= 30:
             print("Obese BMI level")
@@ -154,7 +155,7 @@ with open('data.json') as datafile:
                 print(Style.BRIGHT + Fore.YELLOW + "Warning: Heat Exhaustion due to high body temperature"+ Style.RESET_ALL)
                 flag = True
             if heart > 180:
-                print(Style.BRIGHT + Fore.RED + "Warning: Heat Exhaustion due to high heart rate"+ Style.RESET_ALL)
+                print(Style.BRIGHT + Fore.YELLOW + "Warning: Heat Exhaustion due to high heart rate"+ Style.RESET_ALL)
                 flag = True
     if flag != True:
                print(Style.BRIGHT + Fore.GREEN + "Player stable" + Style.RESET_ALL)
