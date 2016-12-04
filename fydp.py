@@ -17,14 +17,17 @@ delta_temp = []
 delta_HR = []
 core_temp = []
 new_HR = []
+dehydration = 0
 
 c.init()
 
 #flag to indicate yes or no heat exhaustion
 flag = False
 
-#counter to advance index of HR and temp arrays
+#counter to advance index of temp arrays
 i=0
+
+#counter to advance index of HR arrays
 k=0
 
 #used to round the temperature so it can be found in table
@@ -107,10 +110,13 @@ with open('data.json') as datafile:
     body_temp = temp_array[i]
     core_temp.append(body_temp+2)
     core = core_temp[i]
+    print "HR:", heart
+    print "Core Temperature:", core
     if (i>0):
         j = i-1
         temp_minus = core_temp[j]
         delta_temp.append(core-temp_minus)
+        print "Temperature Delta:", delta_temp[j]
         if (heart != 0):
             new_HR.append(heart)
             if(k>0):
@@ -120,9 +126,6 @@ with open('data.json') as datafile:
                 if (delta_HR[k-1]>0):
                     print(Style.BRIGHT + Fore.MAGENTA + "INCREASING" + Style.RESET_ALL)
             k = k+1
-        print "Temperature Delta:", delta_temp[j]
-    print "HR:", heart
-    print "Core Temperature:", core
     if bmi <25:
         print("Normal BMI level")
         if (i >0):
@@ -139,7 +142,7 @@ with open('data.json') as datafile:
         if heart > 200:
             print(Style.BRIGHT + Fore.YELLOW + "Warning: Heat Exhaustion due to high heart rate"+ Style.RESET_ALL)
             flag = True
-        if dehydration >6:
+        if dehydration > 6:
             print(Style.BRIGHT + Fore.YELLOW + "Warning: Heat Exhaustion due to dehydration"+ Style.RESET_ALL)
     if bmi > 25 and bmi < 30:
             print("Overweight BMI level")
